@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ant Simulation</title>
+    <style>
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(100, 10px);
+            grid-gap: 1px;
+            background-color: #f0f0f0;
+        }
+        .cell {
+            width: 10px;
+            height: 10px;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 8px;
+        }
+        #controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button id="startStop">Start/Stop</button><br>
+        <label for="fillPercentage">Fill Percentage:</label>
+        <input type="range" id="fillPercentage" min="0" max="100" value="30"><br>
+        <label for="noiseLevel">Noise Level:</label>
+        <input type="range" id="noiseLevel" min="0" max="100" value="0">
+    </div>
+    <div id="grid"></div>
+    <script>
+        let isRunning = false;
+        let fillPercentage = 30;
+        let noiseLevel = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const startStopButton = document.getElementById('startStop');
+            const fillPercentageInput = document.getElementById('fillPercentage');
+            const noiseLevelInput = document.getElementById('noiseLevel');
+
+            startStopButton.addEventListener('click', () => {
+                isRunning = !isRunning;
+                if (isRunning) {
+                    runSimulation();
+                }
+            });
+
+            fillPercentageInput.addEventListener('input', (e) => {
+                fillPercentage = parseInt(e.target.value);
+                initializeGrid();
+            });
+
+            noiseLevelInput.addEventListener('input', (e) => {
+                noiseLevel = parseInt(e.target.value);
+            });
+
+            // Initialize the simulation
+            initialize();
+        });
+
+        function runSimulation() {
+            if (!isRunning) return;
+            evolve();
+            renderGrid();
+            requestAnimationFrame(runSimulation);
+        }
+
+        const gridSize = 100;
+        const generations = 1000;
+        const directions = ['→', '↘', '↓', '↙', '←', '↖','↑', '↗'];
+        let grid = [];
+
+        function initializeGrid() {
+            for (let i = 0; i < gridSize; i++) {
+                grid[i] = [];
+                for (let j = 0; j < gridSize; j++) {
+                    if (Math.random() < fillPercentage / 100) {
+                        grid[i][j] = directions[Math.floor(Math.random() * directions.length)];
+                    } else {
+                        grid[i][j] = '';
+                    }
+                }
+            }
+        }
+
+        function renderGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.textContent = grid[i][j];
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        function getAverageDirection(i, j) {
+            let dx = 0, dy = 0;
+            for (let di = -1; di <= 1; di++) {
+                for (let dj = -1; dj <= 1; dj++) {
+                    if (di === 0 && dj === 0) continue;
+                    const ni = (i + di + gridSize) % gridSize;
+                    const nj = (j + dj + gridSize) % gridSize;
+                    if (grid[ni][nj]) {
+                        const index = directions.indexOf(grid[ni][nj]);
+                        dx += Math.cos(index * Math.PI / 4);
+                        dy += Math.sin(index * Math.PI / 4);
+                    }
+                }
+            }
+            let angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * (noiseLevel / 100) * Math.PI / 2;
+            return directions[Math.round(angle / (Math.PI / 4) + 8) % 8];
+        }
+
+        function evolve() {
+            let newGrid = JSON.parse(JSON.stringify(grid));
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (grid[i][j]) {
+                        const newDirection = getAverageDirection(i, j);
+                        const dirIndex = directions.indexOf(newDirection);
+                        const di = Math.round(Math.sin(dirIndex * Math.PI / 4));
+                        const dj = Math.round(Math.cos(dirIndex * Math.PI / 4));
+                        const ni = (i + di + gridSize) % gridSize;
+                        const nj = (j + dj + gridSize) % gridSize;
+                        if (!newGrid[ni][nj]) {
+                            newGrid[ni][nj] = newDirection;
+                            newGrid[i][j] = '';
+                        } else {
+                            newGrid[i][j] = newDirection;
+                        }
+                    }
+                }
+            }
+            grid = newGrid;
+        }
+
+        function initialize() {
+            initializeGrid();
+            renderGrid();
+        }
+    </script>
+</body>
+</html>
