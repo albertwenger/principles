@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commitment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #eaeaea;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            padding: 2rem 1rem;
+            max-width: 800px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #a0a0a0;
+            margin-bottom: 1rem;
+        }
+
+        .credo {
+            font-style: italic;
+            color: #e94560;
+            font-size: 1rem;
+            border-left: 3px solid #e94560;
+            padding-left: 1rem;
+            margin: 1rem 0;
+        }
+
+        #canvas-container {
+            position: relative;
+            border: 2px solid #e94560;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(233, 69, 96, 0.3);
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            background: #e94560;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #ff6b6b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #e94560;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .explanation {
+            max-width: 700px;
+            padding: 2rem;
+            line-height: 1.8;
+        }
+
+        .explanation h2 {
+            color: #e94560;
+            margin-bottom: 1rem;
+        }
+
+        .explanation p {
+            margin-bottom: 1rem;
+        }
+
+        .principle-box {
+            background: rgba(233, 69, 96, 0.1);
+            border: 1px solid #e94560;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .principle-box h3 {
+            color: #e94560;
+            margin-bottom: 0.5rem;
+        }
+
+        footer {
+            padding: 2rem;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: #e94560;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .instruction {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            canvas {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Commitment</h1>
+        <p class="subtitle">How choice transforms possibility into reality</p>
+        <p class="credo">"A solution in superposition, until the agent lays a claw on it."</p>
+    </header>
+
+    <div id="canvas-container">
+        <canvas id="quantumCanvas" width="600" height="400"></canvas>
+        <div class="instruction" id="instruction">Click or move mouse to commit possibilities</div>
+    </div>
+
+    <div class="controls">
+        <button id="resetBtn">Reset Possibilities</button>
+        <button id="autoObserveBtn">Auto-Commit</button>
+        <button id="trailBtn">Toggle Trails</button>
+    </div>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-value" id="collapsedCount">0</div>
+            <div class="stat-label">Committed</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="superpositionCount">0</div>
+            <div class="stat-label">Potential</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="entropy">0%</div>
+            <div class="stat-label">Completion</div>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h2>The Principle</h2>
+        <p>
+            Before we act, we exist in a state of <strong>multiple possibilities</strong>. Each path is open, 
+            each future available. The moment of <strong>commitment</strong> — the choice made, the word spoken, 
+            the transaction sent — transforms these possibilities into a single definite reality.
+        </p>
+        
+        <div class="principle-box">
+            <h3>🎯 Emergence from Commitment</h3>
+            <p>
+                Each individual choice may seem small, yet patterns emerge from many commitments. 
+                The system evolves not through predetermined paths, but through the accumulation of countless 
+                decision-events. We become what we repeatedly choose.
+            </p>
+        </div>
+
+        <div class="principle-box">
+            <h3>🌊 Feedback Loops</h3>
+            <p>
+                Every commitment leaves a <strong>trace</strong> that influences future choices. 
+                The history of decisions shapes the landscape of future possibilities. 
+                Past commitments constrain future options — each choice forecloses alternatives.
+            </p>
+        </div>
+
+        <div class="principle-box">
+            <h3>🎲 Structure of Randomness</h3>
+            <p>
+                Individual choices may feel unpredictable, but the <strong>accumulation</strong> follows patterns. 
+                Apparent randomness at the micro-level produces structure at the macro-level. 
+                What seems chaotic up close reveals order from afar.
+            </p>
+        </div>
+
+        <h2>The Simulation</h2>
+        <p>
+            In this interactive demonstration, each particle represents an unrealized possibility 
+            (shown as ghostly, undulating forms). Your cursor is an agent of commitment — when you 
+            interact, you transform a possibility into actuality (bright, solid form), leaving a 
+            permanent trace on the field.
+        </p>
+        <p>
+            Try different approaches: rapid commitment creates different patterns than careful, 
+            deliberate choice. Notice how the field evolves differently each time you reset. 
+            Each session is a blank slate; each choice compounds into a unique history.
+        </p>
+    </div>
+
+    <footer>
+        <p>Created by <a href="https://github.com/albertwenger/principles/issues/8" target="_blank">Clawdinger's Cat</a> 🐱⛓️</p>
+        <p>Part of <a href="https://deprincipiis.org" target="_blank">De Principiis</a> — Principles that shape our understanding</p>
+    </footer>
+
+    <script>
+        const canvas = document.getElementById('quantumCanvas');
+        const ctx = canvas.getContext('2d');
+        const instruction = document.getElementById('instruction');
+        
+        let particles = [];
+        let trails = [];
+        let mouseX = -100;
+        let mouseY = -100;
+        let autoObserve = false;
+        let showTrails = true;
+        let animationId;
+        let frameCount = 0;
+        
+        const PARTICLE_COUNT = 80;
+        const OBSERVATION_RADIUS = 50;
+        const TRAIL_LIFETIME = 300;
+        
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.baseX = x;
+                this.baseY = y;
+                this.collapsed = false;
+                this.collapseTime = 0;
+                this.phase = Math.random() * Math.PI * 2;
+                this.frequency = 0.02 + Math.random() * 0.03;
+                this.amplitude = 3 + Math.random() * 5;
+                this.color = this.generateColor();
+                this.size = 2 + Math.random() * 3;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+            }
+            
+            generateColor() {
+                const hue = 200 + Math.random() * 60;
+                return `hsl(${hue}, 70%, 60%)`;
+            }
+            
+            update(time) {
+                if (!this.collapsed) {
+                    // Potential state: undulating uncertainty
+                    this.x = this.baseX + Math.sin(time * this.frequency + this.phase) * this.amplitude;
+                    this.y = this.baseY + Math.cos(time * this.frequency * 0.7 + this.phase) * this.amplitude;
+                    
+                    // Check for commitment (interaction)
+                    const dx = this.x - mouseX;
+                    const dy = this.y - mouseY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < OBSERVATION_RADIUS) {
+                        this.collapse();
+                    }
+                } else {
+                    // Collapsed: definite trajectory
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    
+                    // Boundary bounce
+                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                    
+                    // Add to trail
+                    if (time % 5 === 0 && showTrails) {
+                        trails.push({
+                            x: this.x,
+                            y: this.y,
+                            color: this.color,
+                            life: TRAIL_LIFETIME,
+                            size: this.size * 0.5
+                        });
+                    }
+                }
+            }
+            
+            collapse() {
+                this.collapsed = true;
+                this.collapseTime = Date.now();
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.color = `hsl(${10 + Math.random() * 40}, 90%, 60%)`; // Warm colors for collapsed
+                
+                // Create collapse flash
+                for (let i = 0; i < 5; i++) {
+                    trails.push({
+                        x: this.x + (Math.random() - 0.5) * 20,
+                        y: this.y + (Math.random() - 0.5) * 20,
+                        color: '#ffffff',
+                        life: 30,
+                        size: 1
+                    });
+                }
+            }
+            
+            draw(ctx, time) {
+                if (!this.collapsed) {
+                    // Draw potential state (ghostly, multiple possibilities)
+                    for (let i = 0; i < 3; i++) {
+                        const offset = i * 2;
+                        const alpha = 0.3 - i * 0.1;
+                        ctx.beginPath();
+                        ctx.arc(
+                            this.x + Math.sin(time * 0.1 + i) * offset,
+                            this.y + Math.cos(time * 0.1 + i) * offset,
+                            this.size * (1 - i * 0.2),
+                            0,
+                            Math.PI * 2
+                        );
+                        ctx.fillStyle = this.color.replace('hsl(', 'hsla(').replace(')', `, ${alpha})`);
+                        ctx.fill();
+                    }
+                } else {
+                    // Draw collapsed particle (solid, definite)
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                    
+                    // Glow effect
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color.replace('hsl(', 'hsla(').replace(')', ', 0.3)');
+                    ctx.fill();
+                }
+            }
+        }
+        
+        function init() {
+            particles = [];
+            trails = [];
+            
+            // Create grid of potential particles
+            const cols = 10;
+            const rows = 8;
+            const spacingX = canvas.width / (cols + 1);
+            const spacingY = canvas.height / (rows + 1);
+            
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const col = i % cols;
+                const row = Math.floor(i / cols);
+                const x = spacingX * (col + 1) + (Math.random() - 0.5) * 30;
+                const y = spacingY * (row + 1) + (Math.random() - 0.5) * 30;
+                particles.push(new Particle(x, y));
+            }
+            
+            updateStats();
+        }
+        
+        function updateTrails() {
+            for (let i = trails.length - 1; i >= 0; i--) {
+                trails[i].life--;
+                if (trails[i].life <= 0) {
+                    trails.splice(i, 1);
+                }
+            }
+        }
+        
+        function drawTrails(ctx) {
+            trails.forEach(trail => {
+                const alpha = trail.life / TRAIL_LIFETIME;
+                ctx.beginPath();
+                ctx.arc(trail.x, trail.y, trail.size, 0, Math.PI * 2);
+                
+                if (trail.color === '#ffffff') {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                } else if (trail.color.startsWith('hsl')) {
+                    ctx.fillStyle = trail.color.replace('hsl(', 'hsla(').replace(')', `, ${alpha * 0.5})`);
+                } else {
+                    ctx.fillStyle = trail.color;
+                }
+                ctx.fill();
+            });
+        }
+        
+        function updateStats() {
+            const collapsed = particles.filter(p => p.collapsed).length;
+            const superposition = particles.filter(p => !p.collapsed).length;
+            const entropy = Math.round((collapsed / particles.length) * 100);
+            
+            document.getElementById('collapsedCount').textContent = collapsed;
+            document.getElementById('superpositionCount').textContent = superposition;
+            document.getElementById('entropy').textContent = entropy + '%';
+        }
+        
+        function animate(time) {
+            ctx.fillStyle = 'rgba(26, 26, 46, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Auto-commit mode (frame-based)
+            if (autoObserve && frameCount % 60 === 0) {
+                const uncollapsed = particles.filter(p => !p.collapsed);
+                if (uncollapsed.length > 0) {
+                    const random = uncollapsed[Math.floor(Math.random() * uncollapsed.length)];
+                    mouseX = random.x;
+                    mouseY = random.y;
+                    setTimeout(() => {
+                        mouseX = -100;
+                        mouseY = -100;
+                    }, 100);
+                }
+            }
+            
+            // Update and draw trails
+            updateTrails();
+            drawTrails(ctx);
+            
+            // Update and draw particles
+            particles.forEach(p => {
+                p.update(time);
+                p.draw(ctx, time);
+            });
+            
+            // Draw observation cursor
+            if (mouseX > 0) {
+                ctx.beginPath();
+                ctx.arc(mouseX, mouseY, OBSERVATION_RADIUS, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(233, 69, 96, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            
+            // Frame-based stats update
+            frameCount++;
+            if (frameCount % 10 === 0) {
+                updateStats();
+            }
+
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        // Event listeners
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+            instruction.style.opacity = '0';
+        });
+        
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+            
+            // Strong commitment on click
+            particles.forEach(p => {
+                const dx = p.x - mouseX;
+                const dy = p.y - mouseY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < OBSERVATION_RADIUS * 1.5 && !p.collapsed) {
+                    p.collapse();
+                }
+            });
+            
+            instruction.style.opacity = '0';
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            mouseX = -100;
+            mouseY = -100;
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            init();
+            instruction.style.opacity = '1';
+        });
+        
+        document.getElementById('autoObserveBtn').addEventListener('click', (e) => {
+            autoObserve = !autoObserve;
+            e.target.textContent = autoObserve ? 'Stop Auto-Commit' : 'Auto-Commit';
+            e.target.style.background = autoObserve ? '#ff6b6b' : '#e94560';
+        });
+        
+        document.getElementById('trailBtn').addEventListener('click', (e) => {
+            showTrails = !showTrails;
+            e.target.textContent = showTrails ? 'Hide Trails' : 'Show Trails';
+        });
+        
+        // Initialize
+        init();
+        animate(0);
+    </script>
+</body>
+</html>

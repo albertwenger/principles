@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Landscape of No Return - Path Dependencies Demo</title>
+    <style>
+        /* ============================================
+           PATH DEPENDENCIES DEMO - CSS
+           Dark Theme with Matthias' Color Palette
+           ============================================ */
+        
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --accent: #0f3460;
+            --highlight: #e94560;
+            --text-primary: #eaeaea;
+            --text-secondary: #a0a0a0;
+            --success: #4ecca3;
+            --warning: #ffc107;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 600;
+        }
+        
+        /* ============================================
+           LANDING SCREEN
+           ============================================ */
+        
+        #landing-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            text-align: center;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        }
+        
+        .title-container {
+            margin-bottom: 3rem;
+        }
+        
+        .main-title {
+            font-size: clamp(2rem, 5vw, 4rem);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--highlight) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+        
+        .subtitle {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: var(--text-secondary);
+            font-style: italic;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+        }
+        
+        .intro-text {
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        
+        .dimension-visual {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .dimension-node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            font-size: 0.8rem;
+            animation: pulse 2s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+        
+        .dimension-node:nth-child(odd) {
+            animation-delay: 0.5s;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .btn-primary {
+            background: var(--highlight);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #ff6b6b;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 2px solid var(--accent);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--accent);
+            transform: translateY(-2px);
+        }
+        
+        /* ============================================
+           MAIN DEMO SCREEN
+           ============================================ */
+        
+        #demo-screen {
+            display: none;
+            min-height: 100vh;
+        }
+        
+        .stats-bar {
+            background: var(--bg-secondary);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border-bottom: 1px solid var(--accent);
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .genotype-display {
+            font-family: monospace;
+            background: var(--accent);
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            letter-spacing: 0.1em;
+        }
+        
+        .fitness-bar-container {
+            width: 150px;
+            height: 8px;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        
+        .fitness-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--highlight));
+            transition: width 0.5s ease;
+        }
+        
+        .main-content {
+            display: flex;
+            height: calc(100vh - 80px);
+        }
+        
+        .visualization-panel {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            min-height: 400px;
+            background: var(--bg-primary);
+        }
+        
+        #landscape-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+        
+        .controls-panel {
+            width: 300px;
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-left: 1px solid var(--accent);
+            overflow-y: auto;
+        }
+        
+        .control-section {
+            margin-bottom: 2rem;
+        }
+        
+        .control-section h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .control-btn {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            background: var(--highlight);
+            transform: translateX(5px);
+        }
+        
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .mode-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 0.5rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .mode-btn.active {
+            background: var(--accent);
+            color: var(--text-primary);
+        }
+        
+        .info-box {
+            background: var(--bg-primary);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid var(--highlight);
+            margin-bottom: 1rem;
+        }
+        
+        .info-box p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+        
+        /* ============================================
+           RESULTS SCREEN
+           ============================================ */
+        
+        #results-screen {
+            display: none;
+            min-height: 100vh;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        }
+        
+        .results-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .result-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .result-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .peak-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--highlight), #ff6b6b);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--accent);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--highlight);
+        }
+        
+        .stat-card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--highlight);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .stat-card-label {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .insights-section {
+            background: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        
+        .insights-section h3 {
+            margin-bottom: 1rem;
+            color: var(--highlight);
+        }
+        
+        .insights-section p {
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .comparison-chart {
+            height: 200px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        /* ============================================
+           TOOLTIP
+           ============================================ */
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(22, 33, 62, 0.95);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 0.75rem;
+            pointer-events: none;
+            z-index: 1000;
+            font-size: 0.85rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .tooltip.visible {
+            opacity: 1;
+        }
+        
+        .tooltip-genotype {
+            font-family: monospace;
+            color: var(--highlight);
+            margin-bottom: 0.25rem;
+        }
+        
+        .tooltip-fitness {
+            color: var(--text-secondary);
+        }
+        
+        /* ============================================
+           RESPONSIVE DESIGN
+           ============================================ */
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .controls-panel {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--accent);
+            }
+            
+            .visualization-panel {
+                height: 50vh;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .stat-item {
+                width: 100%;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+        
+        /* ============================================
+           ANIMATIONS
+           ============================================ */
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px var(--highlight); }
+            50% { box-shadow: 0 0 20px var(--highlight), 0 0 40px var(--highlight); }
+        }
+        
+        .glow {
+            animation: glow 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================
+         LANDING SCREEN
+         ============================================ -->
+    <div id="landing-screen">
+        <div class="title-container fade-in">
+            <h1 class="main-title">The Landscape of No Return</h1>
+            <p class="subtitle">"Every step you take shapes the steps you can take"</p>
+        </div>
+        
+        <div class="dimension-visual fade-in" style="animation-delay: 0.2s">
+            <div class="dimension-node">N</div>
+            <div class="dimension-node">=</div>
+            <div class="dimension-node">1</div>
+            <div class="dimension-node">0</div>
+            <div class="dimension-node">×</div>
+            <div class="dimension-node">K</div>
+            <div class="dimension-node">=</div>
+            <div class="dimension-node">4</div>
+        </div>
+        
+        <p class="intro-text fade-in" style="animation-delay: 0.4s">
+            Path dependence describes a fundamental phenomenon: once a path is taken, it shapes 
+            the future. Navigate through a 10-dimensional fitness landscape with 
+            1,024 possible states and experience how early decisions systematically 
+            constrain your options.
+        </p>
+        
+        <div class="button-group fade-in" style="animation-delay: 0.6s">
+            <button class="btn btn-primary" onclick="startJourney()">Begin Journey</button>
+            <button class="btn btn-secondary" onclick="startRandom()">Random Start</button>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MAIN DEMO SCREEN
+         ============================================ -->
+    <div id="demo-screen">
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">Current Position</span>
+                <span class="stat-value genotype-display" id="current-genotype">0000000000</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Fitness</span>
+                <span class="stat-value" id="current-fitness">0.000</span>
+                <div class="fitness-bar-container">
+                    <div class="fitness-bar" id="fitness-bar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Steps Taken</span>
+                <span class="stat-value" id="steps-taken">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Local Optimum</span>
+                <span class="stat-value" id="local-optimum">No</span>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="visualization-panel">
+                <canvas id="landscape-canvas"></canvas>
+                <div class="tooltip" id="tooltip">
+                    <div class="tooltip-genotype"></div>
+                    <div class="tooltip-fitness"></div>
+                </div>
+            </div>
+            
+            <div class="controls-panel">
+                <div class="control-section">
+                    <h3>Navigation</h3>
+                    <div class="info-box">
+                        <p>Click on a neighboring node (differing by 1 bit) to move. Higher fitness is better.</p>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>View Mode</h3>
+                    <div class="mode-toggle">
+                        <button class="mode-btn active" onclick="setViewMode('2d')">2D</button>
+                        <button class="mode-btn" onclick="setViewMode('3d')">3D</button>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>Actions</h3>
+                    <button class="control-btn" id="greedy-btn" onclick="startGreedyWalk()">▶ Greedy Walk</button>
+                    <button class="control-btn" onclick="resetSameLandscape()">↻ Reset (Same Landscape)</button>
+                    <button class="control-btn" onclick="newLandscape()">🎲 New Landscape</button>
+                    <button class="control-btn" onclick="showButterflyEffect()">🦋 Butterfly Effect</button>
+                    <button class="control-btn" onclick="toggleValleyOfRegret()">🏔️ Valley of Regret</button>
+                </div>
+                
+                <div class="control-section">
+                    <h3>Legend</h3>
+                    <div class="info-box">
+                        <p>🔴 You are here<br>
+                        ⚪ Neighbors (clickable)<br>
+                        🔵 Lower fitness<br>
+                        🟡 Higher fitness<br>
+                        ⭐ Local Optimum</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         RESULTS SCREEN
+         ============================================ -->
+    <div id="results-screen">
+        <div class="results-container">
+            <div class="result-header">
+                <div class="peak-badge">🏔️ LOCAL PEAK REACHED</div>
+                <h1 class="result-title">The Path Has Led You Here</h1>
+                <p class="subtitle">No further improvement possible from this position</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-value" id="final-fitness">0.00</div>
+                    <div class="stat-card-label">Final Fitness</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="final-steps">0</div>
+                    <div class="stat-card-label">Steps Taken</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="nearby-peaks">0</div>
+                    <div class="stat-card-label">Higher Peaks Nearby</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="global-rank">-</div>
+                    <div class="stat-card-label">Global Rank</div>
+                </div>
+            </div>
+            
+            <div class="insights-section">
+                <h3>🔍 The Valley of Regret</h3>
+                <p id="valley-text">
+                    From your final position, there were other paths that could have led to higher peaks. 
+                    This is the essence of Path Dependencies: once you've committed to a direction, 
+                    switching becomes costly or impossible.
+                </p>
+                <div class="comparison-chart" id="comparison-chart">
+                    <!-- Chart will be rendered here -->
+                </div>
+            </div>
+            
+            <div class="insights-section" id="skeptic-section">
+                <h3>🤔 The Skeptic's View</h3>
+                <p id="skeptic-text">
+                    But wait - was staying on this path really "inefficient"? Consider the switching costs: 
+                    to reach a higher peak, you would have had to descend into a valley first, 
+                    sacrificing immediate fitness for potential future gains.
+                </p>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="startNewRun()">Start New Journey</button>
+                <button class="btn btn-secondary" onclick="compareMultipleRuns()">Compare Multiple Runs</button>
+                <button class="btn btn-secondary" onclick="backToLanding()">Back to Start</button>
+            </div>
+        </div>
+    </div>
+    <!-- ============================================
+         JAVASCRIPT
+         ============================================ -->
+    <script>
+        // ============================================
+        // PATH DEPENDENCIES DEMO - JAVASCRIPT
+        // NK-Landscape Model Implementation
+        // ============================================
+        
+        // Configuration
+        const CONFIG = {
+            N: 10,              // Number of dimensions
+            K: 4,               // Number of interacting genes
+            SEED: 12345,        // Fixed seed for reproducibility
+            CANVAS_PADDING: 50,
+            NODE_RADIUS: 6,
+            ANIMATION_SPEED: 500
+        };
+        
+        // State
+        let state = {
+            landscape: null,        // Map of genotype -> fitness
+            positions: null,        // Map of genotype -> {x, y, z}
+            currentGenotype: null,
+            path: [],
+            steps: 0,
+            viewMode: '2d',         // '2d' or '3d'
+            showValleyOfRegret: false,
+            butterflyRuns: [],
+            isGreedyWalking: false,
+            canvas: null,
+            ctx: null,
+            hoveredNode: null,
+            camera: { x: 0, y: 0, zoom: 1 }
+        };
+        
+        // ============================================
+        // PSEUDO-RANDOM NUMBER GENERATOR
+        // ============================================
+        
+        class SeededRandom {
+            constructor(seed) {
+                this.seed = seed;
+            }
+            
+            next() {
+                this.seed = (this.seed * 9301 + 49297) % 233280;
+                return this.seed / 233280;
+            }
+            
+            nextFloat(min = 0, max = 1) {
+                return min + this.next() * (max - min);
+            }
+        }
+        
+        // ============================================
+        // NK-LANDSCAPE GENERATION
+        // ============================================
+        
+        function generateNKLandscape(seed = CONFIG.SEED) {
+            const rng = new SeededRandom(seed);
+            const landscape = new Map();
+            const N = CONFIG.N;
+            const K = CONFIG.K;
+            
+            // Generate fitness contributions for each gene
+            const fitnessContributions = [];
+            
+            for (let i = 0; i < N; i++) {
+                const interacting = [];
+                for (let k = 0; k < K; k++) {
+                    interacting.push((i + k + 1) % N);
+                }
+                
+                const table = new Map();
+                const numCombinations = Math.pow(2, K + 1);
+                
+                for (let c = 0; c < numCombinations; c++) {
+                    const key = c.toString(2).padStart(K + 1, '0');
+                    table.set(key, rng.nextFloat(0, 1));
+                }
+                
+                fitnessContributions.push({
+                    gene: i,
+                    interacting: interacting,
+                    table: table
+                });
+            }
+            
+            // Calculate fitness for all 2^N genotypes
+            const numGenotypes = Math.pow(2, N);
+            
+            for (let g = 0; g < numGenotypes; g++) {
+                const genotype = g.toString(2).padStart(N, '0');
+                let totalFitness = 0;
+                
+                for (let i = 0; i < N; i++) {
+                    const contrib = fitnessContributions[i];
+                    let context = genotype[i];
+                    for (const j of contrib.interacting) {
+                        context += genotype[j];
+                    }
+                    totalFitness += contrib.table.get(context);
+                }
+                
+                landscape.set(genotype, totalFitness / N);
+            }
+            
+            return landscape;
+        }
+        
+        // ============================================
+        // POSITION CALCULATION
+        // ============================================
+        
+        function calculatePositions(landscape) {
+            const positions = new Map();
+            const N = CONFIG.N;
+            const genotypes = Array.from(landscape.keys());
+            const rng = new SeededRandom(CONFIG.SEED + 1);
+            
+            // Initialize with random positions
+            for (const genotype of genotypes) {
+                positions.set(genotype, {
+                    x: rng.nextFloat(-1, 1),
+                    y: rng.nextFloat(-1, 1),
+                    z: landscape.get(genotype)
+                });
+            }
+            
+            // Force-directed placement
+            const iterations = 50;
+            const learningRate = 0.05;
+            
+            for (let iter = 0; iter < iterations; iter++) {
+                for (const g1 of genotypes) {
+                    const pos1 = positions.get(g1);
+                    let forceX = 0, forceY = 0;
+                    
+                    for (const g2 of genotypes) {
+                        if (g1 === g2) continue;
+                        
+                        const pos2 = positions.get(g2);
+                        const dist = hammingDistance(g1, g2);
+                        const dx = pos2.x - pos1.x;
+                        const dy = pos2.y - pos1.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy) + 0.001;
+                        
+                        const targetDist = dist / N * 2;
+                        const force = (targetDist - distance) * learningRate;
+                        
+                        forceX += (dx / distance) * force;
+                        forceY += (dy / distance) * force;
+                    }
+                    
+                    pos1.x += forceX;
+                    pos1.y += forceY;
+                }
+            }
+            
+            // Normalize
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            
+            for (const pos of positions.values()) {
+                minX = Math.min(minX, pos.x);
+                maxX = Math.max(maxX, pos.x);
+                minY = Math.min(minY, pos.y);
+                maxY = Math.max(maxY, pos.y);
+            }
+            
+            const scale = 1.8 / Math.max(maxX - minX, maxY - minY, 0.001);
+            
+            for (const pos of positions.values()) {
+                pos.x = (pos.x - (minX + maxX) / 2) * scale;
+                pos.y = (pos.y - (minY + maxY) / 2) * scale;
+            }
+            
+            return positions;
+        }
+        
+        function hammingDistance(g1, g2) {
+            let dist = 0;
+            for (let i = 0; i < g1.length; i++) {
+                if (g1[i] !== g2[i]) dist++;
+            }
+            return dist;
+        }
+        
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        
+        function getNeighbors(genotype) {
+            const neighbors = [];
+            for (let i = 0; i < genotype.length; i++) {
+                const flipped = genotype.substring(0, i) + 
+                               (genotype[i] === '0' ? '1' : '0') + 
+                               genotype.substring(i + 1);
+                neighbors.push(flipped);
+            }
+            return neighbors;
+        }
+        
+        function isLocalOptimum(genotype, landscape) {
+            const fitness = landscape.get(genotype);
+            const neighbors = getNeighbors(genotype);
+            
+            for (const neighbor of neighbors) {
+                if (landscape.get(neighbor) > fitness) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        function getGlobalOptimum(landscape) {
+            let maxFitness = -Infinity;
+            let bestGenotype = null;
+            
+            for (const [genotype, fitness] of landscape) {
+                if (fitness > maxFitness) {
+                    maxFitness = fitness;
+                    bestGenotype = genotype;
+                }
+            }
+            
+            return { genotype: bestGenotype, fitness: maxFitness };
+        }
+        
+        function countLocalOptima(landscape) {
+            let count = 0;
+            for (const genotype of landscape.keys()) {
+                if (isLocalOptimum(genotype, landscape)) count++;
+            }
+            return count;
+        }
+        
+        function getFitnessRank(genotype, landscape) {
+            const fitness = landscape.get(genotype);
+            let rank = 1;
+            for (const f of landscape.values()) {
+                if (f > fitness) rank++;
+            }
+            return rank;
+        }
+        
+        // ============================================
+        // CANVAS RENDERING
+        // ============================================
+        
+        function initCanvas() {
+            state.canvas = document.getElementById('landscape-canvas');
+            state.ctx = state.canvas.getContext('2d');
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            state.canvas.addEventListener('mousemove', handleMouseMove);
+            state.canvas.addEventListener('click', handleClick);
+            state.canvas.addEventListener('wheel', handleWheel);
+        }
+        
+        function resizeCanvas() {
+            const container = state.canvas.parentElement;
+            const width = container.clientWidth || 800;
+            const height = container.clientHeight || 600;
+            state.canvas.width = width;
+            state.canvas.height = height;
+            render();
+        }
+        
+        function worldToScreen(x, y) {
+            const cx = state.canvas.width / 2 + state.camera.x;
+            const cy = state.canvas.height / 2 + state.camera.y;
+            const scale = Math.min(state.canvas.width, state.canvas.height) / 2.5 * state.camera.zoom;
+            
+            return {
+                x: cx + x * scale,
+                y: cy + y * scale
+            };
+        }
+        
+        function screenToWorld(sx, sy) {
+            const cx = state.canvas.width / 2 + state.camera.x;
+            const cy = state.canvas.height / 2 + state.camera.y;
+            const scale = Math.min(state.canvas.width, state.canvas.height) / 2.5 * state.camera.zoom;
+            
+            return {
+                x: (sx - cx) / scale,
+                y: (sy - cy) / scale
+            };
+        }
+        
+        function getFitnessColor(fitness, isNeighbor = false, isCurrent = false) {
+            if (isCurrent) return '#e94560';
+            if (isNeighbor) return '#4ecca3';  // Brighter green for neighbors
+            
+            // Gradient from cyan (low) to yellow/red (high) - better contrast
+            const t = fitness;
+            if (t < 0.5) {
+                // Cyan to blue
+                const r = Math.floor(0 + t * 2 * 100);
+                const g = Math.floor(200 + t * 2 * 55);
+                const b = Math.floor(255 - t * 2 * 100);
+                return `rgb(${r}, ${g}, ${b})`;
+            } else {
+                // Blue to yellow to red
+                const t2 = (t - 0.5) * 2;
+                const r = Math.floor(100 + t2 * 155);
+                const g = Math.floor(255 - t2 * 155);
+                const b = Math.floor(155 - t2 * 155);
+                return `rgb(${r}, ${g}, ${b})`;
+            }
+        }
+        
+        function render() {
+            if (!state.ctx || !state.landscape) return;
+            
+            const ctx = state.ctx;
+            const canvas = state.canvas;
+            
+            // Clear
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Get all genotypes sorted by fitness (draw low fitness first)
+            const genotypes = Array.from(state.landscape.keys());
+            genotypes.sort((a, b) => state.landscape.get(a) - state.landscape.get(b));
+            
+            const neighbors = state.currentGenotype ? getNeighbors(state.currentGenotype) : [];
+            
+            // Draw connections between neighbors
+            ctx.strokeStyle = 'rgba(100, 150, 200, 0.4)';
+            ctx.lineWidth = 1.5;
+            
+            for (const genotype of genotypes) {
+                const pos = state.positions.get(genotype);
+                const screenPos = worldToScreen(pos.x, pos.y);
+                
+                for (const neighbor of getNeighbors(genotype)) {
+                    if (neighbor > genotype) { // Draw each edge once
+                        const neighborPos = state.positions.get(neighbor);
+                        const neighborScreenPos = worldToScreen(neighborPos.x, neighborPos.y);
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(screenPos.x, screenPos.y);
+                        ctx.lineTo(neighborScreenPos.x, neighborScreenPos.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // Draw path
+            if (state.path.length > 1) {
+                ctx.strokeStyle = '#e94560';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                
+                for (let i = 0; i < state.path.length; i++) {
+                    const pos = state.positions.get(state.path[i]);
+                    const screenPos = worldToScreen(pos.x, pos.y);
+                    
+                    if (i === 0) {
+                        ctx.moveTo(screenPos.x, screenPos.y);
+                    } else {
+                        ctx.lineTo(screenPos.x, screenPos.y);
+                    }
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            // Draw nodes
+            for (const genotype of genotypes) {
+                const fitness = state.landscape.get(genotype);
+                const pos = state.positions.get(genotype);
+                const screenPos = worldToScreen(pos.x, pos.y);
+                
+                const isCurrent = genotype === state.currentGenotype;
+                const isNeighbor = neighbors.includes(genotype);
+                const isInPath = state.path.includes(genotype);
+                
+                let radius = CONFIG.NODE_RADIUS * state.camera.zoom;
+                if (isCurrent) radius *= 2;
+                else if (isNeighbor) radius *= 1.5;
+                
+                ctx.fillStyle = getFitnessColor(fitness, isNeighbor, isCurrent);
+                ctx.beginPath();
+                ctx.arc(screenPos.x, screenPos.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Highlight hovered node
+                if (genotype === state.hoveredNode) {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(screenPos.x, screenPos.y, radius + 3, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                
+                // Mark local optima
+                if (isLocalOptimum(genotype, state.landscape)) {
+                    ctx.strokeStyle = '#ffc107';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(screenPos.x, screenPos.y, radius + 4, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        // ============================================
+        // INTERACTION HANDLERS
+        // ============================================
+        
+        function handleMouseMove(e) {
+            const rect = state.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const worldPos = screenToWorld(x, y);
+            
+            // Find closest node
+            let closest = null;
+            let closestDist = Infinity;
+            
+            for (const [genotype, pos] of state.positions) {
+                const dist = Math.sqrt(Math.pow(pos.x - worldPos.x, 2) + Math.pow(pos.y - worldPos.y, 2));
+                if (dist < closestDist && dist < 0.1) {
+                    closestDist = dist;
+                    closest = genotype;
+                }
+            }
+            
+            state.hoveredNode = closest;
+            
+            // Update tooltip
+            const tooltip = document.getElementById('tooltip');
+            if (closest) {
+                const fitness = state.landscape.get(closest);
+                tooltip.querySelector('.tooltip-genotype').textContent = closest;
+                tooltip.querySelector('.tooltip-fitness').textContent = `Fitness: ${fitness.toFixed(3)}`;
+                tooltip.style.left = (e.clientX + 10) + 'px';
+                tooltip.style.top = (e.clientY + 10) + 'px';
+                tooltip.classList.add('visible');
+            } else {
+                tooltip.classList.remove('visible');
+            }
+            
+            render();
+        }
+        
+        function handleClick(e) {
+            if (!state.hoveredNode || state.isGreedyWalking) return;
+            
+            const neighbors = getNeighbors(state.currentGenotype);
+            
+            // Only allow clicking neighbors
+            if (neighbors.includes(state.hoveredNode)) {
+                moveTo(state.hoveredNode);
+            }
+        }
+        
+        function handleWheel(e) {
+            e.preventDefault();
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            state.camera.zoom *= zoomFactor;
+            state.camera.zoom = Math.max(0.5, Math.min(3, state.camera.zoom));
+            render();
+        }
+        
+        // ============================================
+        // GAME LOGIC
+        // ============================================
+        
+        function moveTo(genotype) {
+            state.currentGenotype = genotype;
+            state.path.push(genotype);
+            state.steps++;
+            
+            updateStats();
+            render();
+            
+            // Check if local optimum reached
+            if (isLocalOptimum(genotype, state.landscape)) {
+                setTimeout(showResults, 500);
+            }
+        }
+        
+        function updateStats() {
+            const fitness = state.landscape.get(state.currentGenotype);
+            const isOptimum = isLocalOptimum(state.currentGenotype, state.landscape);
+            
+            document.getElementById('current-genotype').textContent = state.currentGenotype;
+            document.getElementById('current-fitness').textContent = fitness.toFixed(3);
+            document.getElementById('fitness-bar').style.width = (fitness * 100) + '%';
+            document.getElementById('steps-taken').textContent = state.steps;
+            document.getElementById('local-optimum').textContent = isOptimum ? 'Yes ⭐' : 'No';
+            document.getElementById('local-optimum').style.color = isOptimum ? '#4ecca3' : '#eaeaea';
+        }
+        
+        // ============================================
+        // SCREEN TRANSITIONS
+        // ============================================
+        
+        function showScreen(screenId) {
+            document.getElementById('landing-screen').style.display = 'none';
+            document.getElementById('demo-screen').style.display = 'none';
+            document.getElementById('results-screen').style.display = 'none';
+            
+            document.getElementById(screenId).style.display = 'block';
+        }
+        
+        function startJourney() {
+            initGame();
+            showScreen('demo-screen');
+        }
+        
+        function startRandom() {
+            initGame(true);
+            showScreen('demo-screen');
+        }
+        
+        function initGame(randomStart = false) {
+            // Generate landscape
+            state.landscape = generateNKLandscape();
+            state.positions = calculatePositions(state.landscape);
+            
+            // Choose start
+            const genotypes = Array.from(state.landscape.keys());
+            if (randomStart) {
+                state.currentGenotype = genotypes[Math.floor(Math.random() * genotypes.length)];
+            } else {
+                state.currentGenotype = '0000000000';
+            }
+            
+            state.path = [state.currentGenotype];
+            state.steps = 0;
+            state.camera = { x: 0, y: 0, zoom: 1 };
+            
+            initCanvas();
+            updateStats();
+            render();
+        }
+        
+        function showResults() {
+            const fitness = state.landscape.get(state.currentGenotype);
+            const rank = getFitnessRank(state.currentGenotype, state.landscape);
+            const globalOpt = getGlobalOptimum(state.landscape);
+            
+            // Count higher peaks within some distance
+            let higherPeaks = 0;
+            for (const [genotype, f] of state.landscape) {
+                if (f > fitness && isLocalOptimum(genotype, state.landscape)) {
+                    higherPeaks++;
+                }
+            }
+            
+            document.getElementById('final-fitness').textContent = fitness.toFixed(3);
+            document.getElementById('final-steps').textContent = state.steps;
+            document.getElementById('nearby-peaks').textContent = higherPeaks;
+            document.getElementById('global-rank').textContent = `#${rank} / 1024`;
+            
+            // Update valley text
+            const valleyText = document.getElementById('valley-text');
+            if (higherPeaks > 0) {
+                valleyText.innerHTML = `From your final position, there were <strong>${higherPeaks} higher peaks</strong> in this landscape. 
+                    The global optimum has a fitness of <strong>${globalOpt.fitness.toFixed(3)}</strong>. 
+                    This is the essence of Path Dependencies: once you've committed to a direction, 
+                    switching becomes costly or impossible.`;
+            } else {
+                valleyText.innerHTML = `Congratulations! You found the <strong>global optimum</strong>! 
+                    This is rare - most paths lead to local optima. In this landscape, 
+                    there are <strong>${countLocalOptima(state.landscape)} local optima</strong>, 
+                    but only one global optimum.`;
+            }
+            
+            // Update skeptic text
+            const skepticText = document.getElementById('skeptic-text');
+            const switchingCost = globalOpt.fitness - fitness;
+            skepticText.innerHTML = `The "Valley of Regret" shows what could have been. 
+                But consider: reaching the global optimum would have required a different path from the start. 
+                The switching cost from here is a fitness gap of <strong>${switchingCost.toFixed(3)}</strong>. 
+                Was your path truly "inefficient," or was it the best you could do with local information?`;
+            
+            showScreen('results-screen');
+        }
+        
+        // ============================================
+        // CONTROL FUNCTIONS
+        // ============================================
+        
+        function setViewMode(mode) {
+            state.viewMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            render();
+        }
+        
+        async function startGreedyWalk() {
+            if (state.isGreedyWalking) return;
+            
+            state.isGreedyWalking = true;
+            document.getElementById('greedy-btn').disabled = true;
+            
+            while (!isLocalOptimum(state.currentGenotype, state.landscape)) {
+                const neighbors = getNeighbors(state.currentGenotype);
+                const currentFitness = state.landscape.get(state.currentGenotype);
+                
+                // Find best neighbor
+                let bestNeighbor = null;
+                let bestFitness = currentFitness;
+                
+                for (const neighbor of neighbors) {
+                    const fitness = state.landscape.get(neighbor);
+                    if (fitness > bestFitness) {
+                        bestFitness = fitness;
+                        bestNeighbor = neighbor;
+                    }
+                }
+                
+                if (bestNeighbor) {
+                    moveTo(bestNeighbor);
+                    await sleep(CONFIG.ANIMATION_SPEED);
+                } else {
+                    break;
+                }
+            }
+            
+            state.isGreedyWalking = false;
+            document.getElementById('greedy-btn').disabled = false;
+        }
+        
+        function resetSameLandscape() {
+            state.currentGenotype = '0000000000';
+            state.path = [state.currentGenotype];
+            state.steps = 0;
+            state.camera = { x: 0, y: 0, zoom: 1 };
+            updateStats();
+            render();
+        }
+        
+        function newLandscape() {
+            CONFIG.SEED = Math.floor(Math.random() * 100000);
+            initGame(true);
+        }
+        
+        function showButterflyEffect() {
+            // Run multiple times from slightly different starts
+            const runs = [];
+            const originalStart = state.currentGenotype;
+            
+            // Flip each bit once
+            for (let i = 0; i < CONFIG.N; i++) {
+                const flipped = originalStart.substring(0, i) + 
+                               (originalStart[i] === '0' ? '1' : '0') + 
+                               originalStart.substring(i + 1);
+                
+                // Greedy walk from this start
+                let current = flipped;
+                let path = [current];
+                
+                while (true) {
+                    const neighbors = getNeighbors(current);
+                    const currentFitness = state.landscape.get(current);
+                    
+                    let bestNeighbor = null;
+                    let bestFitness = currentFitness;
+                    
+                    for (const neighbor of neighbors) {
+                        const fitness = state.landscape.get(neighbor);
+                        if (fitness > bestFitness) {
+                            bestFitness = fitness;
+                            bestNeighbor = neighbor;
+                        }
+                    }
+                    
+                    if (bestNeighbor) {
+                        current = bestNeighbor;
+                        path.push(current);
+                    } else {
+                        break;
+                    }
+                }
+                
+                runs.push({
+                    start: flipped,
+                    end: current,
+                    fitness: state.landscape.get(current),
+                    path: path
+                });
+            }
+            
+            // Display results
+            state.butterflyRuns = runs;
+            alert(`Butterfly Effect Results:\n\n` +
+                  `Starting from ${originalStart} with one bit flipped:\n` +
+                  runs.map((r, i) => `Run ${i+1}: ${r.start} → ${r.end} (fitness: ${r.fitness.toFixed(3)})`).join('\n') +
+                  `\n\nAll ${CONFIG.N} runs ended at different locations!`);
+        }
+        
+        function toggleValleyOfRegret() {
+            state.showValleyOfRegret = !state.showValleyOfRegret;
+            render();
+        }
+        
+        function startNewRun() {
+            showScreen('demo-screen');
+            resetSameLandscape();
+        }
+        
+        function compareMultipleRuns() {
+            showButterflyEffect();
+        }
+        
+        function backToLanding() {
+            showScreen('landing-screen');
+        }
+        
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Pre-generate landscape for faster start
+            state.landscape = generateNKLandscape();
+        });
+    </script>
+</body>
+</html>
