@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Effects — De Principiis</title>
+    <style>
+        /* ========================================
+           DE PRINCIPIIS — SHARED STYLE REFERENCE
+           ======================================== */
+        
+        :root {
+            /* Light theme (default) */
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f0f0f0;
+            --text-primary: #2a2a2a;
+            --text-secondary: #555555;
+            --text-muted: #888888;
+            --accent: #4a7ab0;
+            --accent-hover: #3d6a9c;
+            --border: #e0e0e0;
+            --shadow: rgba(0, 0, 0, 0.08);
+            --canvas-bg: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #1c2a4a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #bbbbbb;
+            --text-muted: #888888;
+            --accent: #7faadb;
+            --accent-hover: #9bc0eb;
+            --border: #2a3a5e;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --canvas-bg: #16213e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-primary);
+            min-height: 100vh;
+            font-family: Georgia, 'Times New Roman', serif;
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: normal;
+        }
+
+        .subtitle {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+        }
+
+        .description {
+            max-width: 800px;
+            margin: 0 auto 30px;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .breadcrumb {
+            text-align: left;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 8px 16px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px var(--shadow);
+            z-index: 100;
+        }
+
+        .simulation-container {
+            background: var(--canvas-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px var(--shadow);
+            position: relative;
+            height: 500px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: pointer;
+        }
+
+        .controls {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 40px;
+        }
+
+        .controls-header {
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        button.action-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        button.action-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .stats-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px var(--shadow);
+            font-family: monospace;
+            pointer-events: none;
+            opacity: 0.9;
+        }
+
+        .stat-line {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
+        .insight-box {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-left: 4px solid var(--accent);
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">☀️</span> <span id="theme-label">Light</span>
+    </button>
+
+    <div class="container">
+        <header>
+            <div class="breadcrumb">
+                <a href="index.html">De Principiis</a> → Network Effects
+            </div>
+            <h1>Network Effects</h1>
+            <p class="subtitle">Why connection scales non-linearly</p>
+        </header>
+
+        <main class="main-content">
+            <p class="description">
+                The value of a network increases with each additional participant, creating self-reinforcing growth.
+                Click the canvas to add nodes to the network and watch how the total connections—and potential value—scale exponentially compared to the number of individual nodes.
+            </p>
+
+            <div class="simulation-container">
+                <canvas id="networkCanvas"></canvas>
+                <div class="stats-panel">
+                    <div class="stat-line">Nodes: <span class="stat-value" id="nodesCount">0</span></div>
+                    <div class="stat-line">Connections: <span class="stat-value" id="connectionsCount">0</span></div>
+                    <div class="stat-line">Network Value: <span class="stat-value" id="networkValue">0</span></div>
+                    <div class="stat-line">Growth Phase: <span class="stat-value" id="growthPhase">None</span></div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="controls-header">Controls</div>
+                <div class="controls-grid">
+                    <div class="control-group" style="justify-content: center;">
+                        <button class="action-btn" id="addNodeBtn">Add Node</button>
+                    </div>
+                    <div class="control-group" style="justify-content: center;">
+                        <button class="action-btn" id="resetBtn" style="background: var(--text-muted);">Reset Network</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="insight-box">
+                <h3>The Metcalfe's Law Connection</h3>
+                <p>
+                    A network of <strong>n</strong> nodes can make <strong>n(n-1)/2</strong> connections. 
+                    While the number of participants grows linearly (1, 2, 3, 4...), the number of possible interactions grows quadratically (0, 1, 3, 6...). 
+                    This explains why platforms like telephone networks, languages, and social media tend toward monopoly: the larger network is mathematically more valuable to every participant.
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const body = document.documentElement;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            
+            const icon = document.getElementById('theme-icon');
+            const label = document.getElementById('theme-label');
+            
+            if (newTheme === 'dark') {
+                icon.textContent = '🌙';
+                label.textContent = 'Dark';
+            } else {
+                icon.textContent = '☀️';
+                label.textContent = 'Light';
+            }
+            
+            localStorage.setItem('theme', newTheme);
+            drawNetwork(); // Redraw with new theme colors
+        }
+
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedTheme === 'dark') {
+                document.getElementById('theme-icon').textContent = '🌙';
+                document.getElementById('theme-label').textContent = 'Dark';
+            }
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            toggleTheme();
+        }
+
+        // Simulation logic
+        const canvas = document.getElementById('networkCanvas');
+        const ctx = canvas.getContext('2d');
+        let nodes = [];
+        let animationId;
+        
+        // Resize canvas to match container
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            drawNetwork();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        class Node {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = 6;
+                // Arrival animation
+                this.scale = 0;
+            }
+
+            update(width, height) {
+                // Gentle floating
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Bounce off walls
+                if (this.x < this.radius || this.x > width - this.radius) this.vx *= -1;
+                if (this.y < this.radius || this.y > height - this.radius) this.vy *= -1;
+                
+                // Animate entry
+                if (this.scale < 1) {
+                    this.scale += 0.05;
+                }
+            }
+        }
+
+        function calculateValue(nodeCount) {
+            const connections = nodeCount * (nodeCount - 1) / 2;
+            if (nodeCount < 3) return { value: nodeCount, phase: "Linear" };
+            if (nodeCount < 8) return { value: connections, phase: "Quadratic" };
+            return { value: Math.floor(connections * Math.log(nodeCount)), phase: "Exponential" };
+        }
+
+        function updateStats() {
+            const numNodes = nodes.length;
+            const numConnections = numNodes * (numNodes - 1) / 2;
+            const stats = calculateValue(numNodes);
+            
+            document.getElementById('nodesCount').textContent = numNodes;
+            document.getElementById('connectionsCount').textContent = numConnections;
+            document.getElementById('networkValue').textContent = stats.value;
+            document.getElementById('growthPhase').textContent = stats.phase;
+        }
+
+        function addNode(x, y) {
+            // Default to center if no coords provided
+            const spawnX = x || (canvas.width / 2) + (Math.random() - 0.5) * 100;
+            const spawnY = y || (canvas.height / 2) + (Math.random() - 0.5) * 100;
+            
+            nodes.push(new Node(spawnX, spawnY));
+            updateStats();
+        }
+
+        function drawNetwork() {
+            // Get theme colors
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const bgColor = isDark ? '#16213e' : '#ffffff';
+            const nodeColor = isDark ? '#7faadb' : '#4a7ab0';
+            const lineColor = isDark ? 'rgba(127, 170, 219, 0.2)' : 'rgba(74, 122, 176, 0.2)';
+            
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw connections
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = lineColor;
+            
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[i].x, nodes[i].y);
+                    ctx.lineTo(nodes[j].x, nodes[j].y);
+                    ctx.stroke();
+                }
+            }
+
+            // Draw nodes
+            for (const node of nodes) {
+                node.update(canvas.width, canvas.height);
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.radius * node.scale, 0, Math.PI * 2);
+                ctx.fillStyle = nodeColor;
+                ctx.fill();
+                
+                // Glow effect
+                ctx.shadowBlur = 10 * node.scale;
+                ctx.shadowColor = nodeColor;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            animationId = requestAnimationFrame(drawNetwork);
+        }
+
+        // Event listeners
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            addNode(x, y);
+        });
+
+        document.getElementById('addNodeBtn').addEventListener('click', () => addNode());
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            nodes = [];
+            updateStats();
+        });
+
+        // Init
+        setTimeout(() => {
+            resizeCanvas();
+            // Start with 2 nodes
+            addNode(canvas.width * 0.4, canvas.height * 0.5);
+            addNode(canvas.width * 0.6, canvas.height * 0.5);
+        }, 100);
+    </script>
+</body>
+</html>
