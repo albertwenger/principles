@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Network Effects — De Principiis</title>
+    <link rel="stylesheet" href="/style.css">
     <style>
         :root {
             --bg-primary: #fafafa;
@@ -137,7 +138,7 @@
 
         .controls-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
+            grid-template-columns: 2fr 2fr;
             gap: 20px;
             align-items: center;
         }
@@ -157,18 +158,17 @@
             cursor: pointer;
         }
 
-        .checkbox-item input { cursor: pointer; }
-
-        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        .control-buttons { display: flex; gap: 10px; }
 
         .btn {
-            padding: 10px 20px;
+            padding: 10px 15px;
             border: none;
             border-radius: 6px;
             font-family: inherit;
             font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.2s;
+            flex: 1;
         }
         .btn-primary { background: var(--accent); color: white; }
         .btn-primary:hover { background: var(--accent-hover); }
@@ -191,18 +191,13 @@
         }
 
         .insight p { color: var(--text-secondary); margin-bottom: 10px; }
-        .insight p:last-child { margin-bottom: 0; }
-
         .formula {
             font-family: 'Courier New', monospace;
             background: var(--bg-tertiary);
-            padding: 4px 8px;
+            padding: 2px 6px;
             border-radius: 4px;
             color: var(--accent);
         }
-
-        footer { margin-top: 40px; text-align: center; color: var(--text-muted); font-size: 0.9rem; }
-        footer a { color: var(--accent); text-decoration: none; }
 
         .theme-toggle {
             position: fixed;
@@ -216,14 +211,12 @@
             cursor: pointer;
             font-size: 0.85rem;
             z-index: 100;
-            transition: all 0.2s;
         }
 
         @media (max-width: 750px) {
             .simulation-container { grid-template-columns: 1fr; }
             .stats { grid-template-columns: 1fr 1fr; }
             .controls-grid { grid-template-columns: 1fr; }
-            h1 { font-size: 1.6rem; }
         }
     </style>
 </head>
@@ -243,8 +236,7 @@
 
         <main>
             <p class="description">
-                Click on the left canvas to add nodes. Compare different value models to see how 
-                network value scales relative to the number of participants.
+                Click the graph to add nodes. The chart on the right builds dynamically as your network grows.
             </p>
 
             <div class="stats">
@@ -278,7 +270,7 @@
             </div>
 
             <div class="controls">
-                <div class="controls-header">Show Models</div>
+                <div class="controls-header">Interaction</div>
                 <div class="controls-grid">
                     <div class="checkbox-group">
                         <label class="checkbox-item"><input type="checkbox" id="check-sarnoff" onchange="drawValueCurve()"> Sarnoff (n)</label>
@@ -286,10 +278,9 @@
                         <label class="checkbox-item"><input type="checkbox" id="check-metcalfe" checked onchange="drawValueCurve()"> Metcalfe (n²)</label>
                         <label class="checkbox-item"><input type="checkbox" id="check-reed" onchange="drawValueCurve()"> Reed (2ⁿ)</label>
                     </div>
-                    <div class="control-group">
+                    <div class="control-buttons">
                         <button class="btn btn-primary" onclick="addRandomNode()">Add Node</button>
-                    </div>
-                    <div class="control-group">
+                        <button class="btn btn-secondary" onclick="popNode()">Remove Node</button>
                         <button class="btn btn-secondary" onclick="resetNetwork()">Reset</button>
                     </div>
                 </div>
@@ -297,36 +288,10 @@
 
             <div class="insight">
                 <h2>The Models</h2>
-                <p>
-                    <strong>Sarnoff's Law</strong> (<span class="formula">V ∝ n</span>): 
-                    The value of a broadcast network (like traditional TV or Radio) is proportional to the number of viewers. 
-                    Adding one more viewer adds exactly one "unit" of value.
-                </p>
-                <p>
-                    <strong>Odlyzko's Law</strong> (<span class="formula">V ∝ n log n</span>): 
-                    A more conservative model for communications networks, suggesting that while value grows faster than 
-                    linearly, the "utility" of each connection diminishes as the network becomes massive.
-                </p>
-                <p>
-                    <strong>Metcalfe's Law</strong> (<span class="formula">V ∝ n²</span>): 
-                    The value of a telecommunications network is proportional to the square of the number of connected 
-                    users. Each new participant adds a potential connection for every existing member.
-                </p>
-                <p>
-                    <strong>Reed's Law</strong> (<span class="formula">V ∝ 2ⁿ</span>): 
-                    The value of "Large-Scale Group-Forming Networks" (social networks, DAOs, communities). 
-                    The value scales with the number of possible *subgroups*, which grows exponentially.
-                </p>
-            </div>
-
-            <div class="insight">
-                <h2>Why This Matters</h2>
-                <p>
-                    Network effects explain why the internet tends toward concentration — the value curve rewards 
-                    scale nonlinearly. But they also explain why <em>protocols</em> can be more powerful than platforms. 
-                    A protocol (email, HTTP, Bitcoin) can't be owned, which means its network effects benefit everyone rather 
-                    than accruing to a single company.
-                </p>
+                <p><strong>Sarnoff's Law</strong> (<span class="formula">V ∝ n</span>): Broadcast value. Adding one viewer adds one unit of value.</p>
+                <p><strong>Odlyzko's Law</strong> (<span class="formula">V ∝ n log n</span>): Diminishing utility in massive networks.</p>
+                <p><strong>Metcalfe's Law</strong> (<span class="formula">V ∝ n²</span>): Telecommunications value. Each participant adds a connection for every existing member.</p>
+                <p><strong>Reed's Law</strong> (<span class="formula">V ∝ 2ⁿ</span>): Group-forming value (DAOs/communities). Scales with possible subgroups.</p>
             </div>
         </main>
 
@@ -336,7 +301,7 @@
     </div>
 
     <script>
-        // Theme
+        // Theme logic
         function initTheme() {
             const saved = localStorage.getItem('deprincipiis-theme');
             if (saved === 'dark') {
@@ -376,14 +341,12 @@
 
         function getColors() {
             const style = getComputedStyle(document.documentElement);
-            const accent = style.getPropertyValue('--accent').trim();
             return {
                 bg: style.getPropertyValue('--canvas-bg').trim(),
-                accent: accent,
+                accent: style.getPropertyValue('--accent').trim(),
                 border: style.getPropertyValue('--border').trim(),
                 text: style.getPropertyValue('--text-secondary').trim(),
-                muted: style.getPropertyValue('--text-muted').trim(),
-                metcalfe: accent
+                muted: style.getPropertyValue('--text-muted').trim()
             };
         }
 
@@ -406,13 +369,18 @@
         }
 
         function addRandomNode() {
-            const w = networkCanvas.width;
-            const h = networkCanvas.height;
             const margin = 40;
             addNode(
-                margin + Math.random() * (w - 2 * margin),
-                margin + Math.random() * (h - 2 * margin)
+                margin + Math.random() * (networkCanvas.width - 2 * margin),
+                margin + Math.random() * (networkCanvas.height - 2 * margin)
             );
+        }
+
+        function popNode() {
+            nodes.pop();
+            updateStats();
+            drawNetwork();
+            drawValueCurve();
         }
 
         function resetNetwork() {
@@ -433,11 +401,9 @@
 
         function drawNetwork() {
             const c = getColors();
-            const w = networkCanvas.width;
-            const h = networkCanvas.height;
-            nCtx.clearRect(0, 0, w, h);
+            nCtx.clearRect(0, 0, networkCanvas.width, networkCanvas.height);
             nCtx.fillStyle = c.bg;
-            nCtx.fillRect(0, 0, w, h);
+            nCtx.fillRect(0, 0, networkCanvas.width, networkCanvas.height);
 
             if (nodes.length > 1) {
                 for (let i = 0; i < nodes.length; i++) {
@@ -468,7 +434,7 @@
                 nCtx.fillStyle = c.muted;
                 nCtx.font = '16px Georgia';
                 nCtx.textAlign = 'center';
-                nCtx.fillText('Click to add nodes', w / 2, h / 2);
+                nCtx.fillText('Click to add nodes', networkCanvas.width / 2, networkCanvas.height / 2);
             }
         }
 
@@ -476,7 +442,7 @@
             const c = getColors();
             const w = valueCanvas.width;
             const h = valueCanvas.height;
-            const pad = { top: 40, right: 20, bottom: 40, left: 60 };
+            const pad = { top: 40, right: 80, bottom: 40, left: 60 };
             const plotW = w - pad.left - pad.right;
             const plotH = h - pad.top - pad.bottom;
 
@@ -491,23 +457,22 @@
             vCtx.lineTo(w - pad.right, h - pad.bottom);
             vCtx.stroke();
 
-            const activeModels = [];
-            if (document.getElementById('check-sarnoff').checked) activeModels.push('sarnoff');
-            if (document.getElementById('check-odlyzko').checked) activeModels.push('odlyzko');
-            if (document.getElementById('check-metcalfe').checked) activeModels.push('metcalfe');
-            if (document.getElementById('check-reed').checked) activeModels.push('reed');
+            const models = ['sarnoff', 'odlyzko', 'metcalfe', 'reed'];
+            const activeModels = models.filter(m => document.getElementById(`check-${m}`).checked);
 
             if (nodes.length < 1 || activeModels.length === 0) return;
 
-            const maxN = Math.max(nodes.length, 12);
+            // Chart only builds up to current nodes + small hint
+            const maxN = Math.max(nodes.length, 5); 
             let maxVal = 0;
             activeModels.forEach(m => maxVal = Math.max(maxVal, calcValue(m, maxN)));
 
             activeModels.forEach(m => {
                 vCtx.beginPath();
-                vCtx.strokeStyle = m === 'metcalfe' ? c.accent : COLORS[m];
+                vCtx.strokeStyle = COLORS[m];
                 vCtx.lineWidth = 2;
-                for (let i = 0; i <= maxN; i++) {
+                
+                for (let i = 0; i <= nodes.length; i++) {
                     const x = pad.left + (i / maxN) * plotW;
                     const y = (h - pad.bottom) - (calcValue(m, i) / maxVal) * plotH;
                     if (i === 0) vCtx.moveTo(x, y);
@@ -515,14 +480,27 @@
                 }
                 vCtx.stroke();
 
-                // Point for current N
+                // Point at current
                 const cx = pad.left + (nodes.length / maxN) * plotW;
                 const cy = (h - pad.bottom) - (calcValue(m, nodes.length) / maxVal) * plotH;
                 vCtx.beginPath();
                 vCtx.arc(cx, cy, 4, 0, Math.PI * 2);
-                vCtx.fillStyle = vCtx.strokeStyle;
+                vCtx.fillStyle = COLORS[m];
                 vCtx.fill();
+
+                // Label at the end of the line
+                vCtx.font = '11px Georgia';
+                vCtx.textAlign = 'left';
+                vCtx.fillText(m.charAt(0).toUpperCase() + m.slice(1), cx + 8, cy + 4);
             });
+
+            // X-axis ticks
+            vCtx.fillStyle = c.muted;
+            vCtx.textAlign = 'center';
+            for (let i = 0; i <= maxN; i += Math.max(1, Math.floor(maxN/5))) {
+                const x = pad.left + (i / maxN) * plotW;
+                vCtx.fillText(i, x, h - pad.bottom + 15);
+            }
         }
 
         networkCanvas.addEventListener('click', (e) => {
