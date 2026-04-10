@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Path Dependence — De Principiis</title>
+    <style>
+        :root {
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f0f0f0;
+            --text-primary: #2a2a2a;
+            --text-secondary: #555555;
+            --text-muted: #888888;
+            --accent: #4a7ab0;
+            --accent-hover: #3d6a9c;
+            --border: #e0e0e0;
+            --shadow: rgba(0, 0, 0, 0.08);
+            --canvas-bg: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #1c2a4a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #bbbbbb;
+            --text-muted: #888888;
+            --accent: #7faadb;
+            --accent-hover: #9bc0eb;
+            --border: #2a3a5e;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --canvas-bg: #16213e;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg-primary);
+            min-height: 100vh;
+            font-family: Georgia, 'Times New Roman', serif;
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px var(--shadow);
+            z-index: 100;
+        }
+
+        .theme-toggle:hover { background: var(--bg-tertiary); }
+
+        .breadcrumb {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover { text-decoration: underline; }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: normal;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-style: italic;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .description {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            max-width: 700px;
+        }
+
+        .simulation-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .panel-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            border-radius: 8px;
+            background: var(--canvas-bg);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .stat-box {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            color: var(--accent);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .controls {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .controls-header {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-group label span {
+            color: var(--accent);
+            font-size: 0.85rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--bg-tertiary);
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        button.btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        button.btn-primary:hover { background: var(--accent-hover); }
+
+        button.btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        button.btn-secondary:hover { background: var(--border); }
+
+        .insight-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+        }
+
+        .insight-box h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .insight-box p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .example-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .example-card h4 {
+            color: var(--accent);
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+
+        .example-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 700px) {
+            .container { padding: 20px 15px; }
+            h1 { font-size: 1.6rem; }
+            .controls-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .examples-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">☀️</span> <span id="theme-label">Light</span>
+    </button>
+
+    <div class="container">
+        <header>
+            <div class="breadcrumb">
+                <a href="index.html">De Principiis</a> → Path Dependence
+            </div>
+            <h1>Path Dependence</h1>
+            <p class="subtitle">Where you end up depends on where you've been</p>
+        </header>
+
+        <main>
+            <p class="description">
+                Early accidents become permanent advantages. Small differences in timing or circumstance — not quality, not design — determine which outcome locks in and persists. The same starting conditions, run again, would produce a different world.
+            </p>
+
+            <!-- Main simulation: Pólya Urn -->
+            <div class="simulation-panel">
+                <div class="panel-title">Multiple Histories — Same Starting Point</div>
+                <canvas id="mainCanvas" height="320"></canvas>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <span class="stat-value" id="statDraws">0</span>
+                        <span class="stat-label">Draws</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="statPaths">0</span>
+                        <span class="stat-label">Histories</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="statLocked">0</span>
+                        <span class="stat-label">Strongly Biased (&gt;90%)</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="statSpread">—</span>
+                        <span class="stat-label">Spread of Outcomes</span>
+                    </div>
+                </div>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-top:10px;">
+                    Trajectory color reflects current proportion — matching the histogram below. <em>Strongly biased</em> marks histories above 90% or below 10%; the Pólya urn can converge to any proportion, so this threshold is a marker, not a boundary.
+                </p>
+            </div>
+
+            <!-- Outcome distribution -->
+            <div class="simulation-panel">
+                <div class="panel-title">Distribution of Final Outcomes</div>
+                <canvas id="histCanvas" height="160"></canvas>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <div class="controls-header">Controls</div>
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <label>Starting balls (each color) <span id="initVal">1</span></label>
+                        <input type="range" id="initBalls" min="1" max="10" value="1" oninput="updateLabel('initBalls','initVal')">
+                    </div>
+                    <div class="control-group">
+                        <label>Parallel histories <span id="pathsVal">20</span></label>
+                        <input type="range" id="numPaths" min="5" max="50" value="20" oninput="updateLabel('numPaths','pathsVal')">
+                    </div>
+                    <div class="control-group">
+                        <label>Draws per step <span id="stepsVal">5</span></label>
+                        <input type="range" id="stepsPerTick" min="1" max="30" value="5" oninput="updateLabel('stepsPerTick','stepsVal')">
+                    </div>
+                    <div class="control-group">
+                        <label>Speed <span id="speedVal">medium</span></label>
+                        <input type="range" id="speed" min="1" max="3" value="2" step="1"
+                            oninput="updateSpeedLabel()">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" id="btnStart" onclick="startOrPause()">Start</button>
+                    <button class="btn btn-secondary" onclick="reset()">Reset</button>
+                    <button class="btn btn-secondary" onclick="resetSameSeed()">Replay Same Seed</button>
+                    <button class="btn btn-secondary" onclick="runToEnd()">Run to End</button>
+                </div>
+            </div>
+
+            <!-- Core insight -->
+            <div class="insight-box">
+                <h3>🎯 The Core Insight</h3>
+                <p>
+                    Each history starts identically: one red ball, one blue ball. On each draw, one ball is selected at random — with probability proportional to the current composition of the urn. Its color is noted, it is returned, and one extra ball of the same color is added. This is the reinforcement: whichever color was just drawn becomes slightly more likely to be drawn next.
+                </p>
+                <p style="margin-top: 10px;">
+                    The first few draws create a slight imbalance. The reinforcement mechanism amplifies it. After enough draws, each history has locked into a stable proportion — shaped by early randomness and cemented by reinforcement. Neither element alone is sufficient: randomness without reinforcement doesn't lock in; reinforcement without early randomness would converge deterministically to 50%.
+                </p>
+                <p style="margin-top: 10px;">
+                    Try <em>Replay Same Seed</em>: the simulation runs again with the exact same random sequence and produces the exact same set of locked-in worlds. Path dependence is not randomness — it is early randomness amplified into permanence. The same history, replayed, always ends the same way.
+                </p>
+            </div>
+
+            <!-- The math note -->
+            <div class="insight-box">
+                <h3>📐 What the Math Says</h3>
+                <p>
+                    This is the Pólya urn model. Its remarkable property: the final proportion of red is equally likely to be anywhere between 0 and 1. Not clustered around 50% — uniformly distributed across all possibilities. Early chance events don't just nudge the outcome; they determine it across the full range. The distribution of locked-in worlds is flat.
+                </p>
+            </div>
+
+            <!-- Real-world examples -->
+            <div class="examples-grid">
+                <div class="example-card">
+                    <h4>⌨️ QWERTY</h4>
+                    <p>Designed in 1873 to prevent typewriter jams. Faster layouts exist. But early adoption locked QWERTY in — billions of keyboards later, the accident persists.</p>
+                </div>
+                <div class="example-card">
+                    <h4>📼 VHS vs. Betamax</h4>
+                    <p>Betamax had better picture quality. VHS won because early rental availability gave it a slight lead, which network effects amplified into a total lock-in.</p>
+                </div>
+                <div class="example-card">
+                    <h4>🏙️ Cities</h4>
+                    <p>Why is a city where it is? Often: a river crossing, a safe harbor, a colonial fort. Centuries of infrastructure accumulation follow from accidents of geography and history.</p>
+                </div>
+                <div class="example-card">
+                    <h4>💻 Programming Languages</h4>
+                    <p>C was written for Unix. Unix spread through universities. Generations of programmers learned C-family syntax. Today's languages still echo 1970s contingencies.</p>
+                </div>
+            </div>
+
+            <footer>
+                <p><a href="index.html">← Back to De Principiis</a></p>
+            </footer>
+        </main>
+    </div>
+
+<script>
+    // ── Theme ──────────────────────────────────────────────────────────────────
+    function initTheme() {
+        const saved = localStorage.getItem('deprincipiis-theme');
+        if (saved === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            updateThemeUI('dark');
+        }
+    }
+
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        if (next === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+        }
+        localStorage.setItem('deprincipiis-theme', next);
+        updateThemeUI(next);
+        drawAll();
+    }
+
+    function updateThemeUI(theme) {
+        document.getElementById('theme-icon').textContent = theme === 'dark' ? '🌙' : '☀️';
+        document.getElementById('theme-label').textContent = theme === 'dark' ? 'Dark' : 'Light';
+    }
+
+    // ── State ──────────────────────────────────────────────────────────────────
+    let urns = [];          // Each urn: { red, blue, history: [proportions] }
+    let running = false;    // true once user clicks Start
+    let paused = false;
+    let animHandle = null;
+    let completedHistories = []; // final proportions of finished urns (for histogram)
+    const MAX_DRAWS = 300;
+
+    // Seeded PRNG (mulberry32) — for reproducible replays
+    function mulberry32(seed) {
+        return function() {
+            seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+            let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+            t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        };
+    }
+
+    // Each urn gets its own pre-generated sequence of random numbers.
+    // This makes replay perfectly deterministic regardless of animation timing
+    // or the order in which urns are drawn from.
+    let currentSeed = null;
+
+    function generateUrnSequences(seed, numPaths) {
+        // Use seed to create per-urn sequences via a split-key approach:
+        // urn i gets seed ^ (i * large_prime) as its own seed.
+        const sequences = [];
+        for (let i = 0; i < numPaths; i++) {
+            const urnSeed = (seed ^ (i * 2654435761)) >>> 0; // Knuth multiplicative hash
+            const gen = mulberry32(urnSeed);
+            sequences.push(Array.from({ length: MAX_DRAWS + 4 }, () => gen()));
+        }
+        return sequences;
+    }
+
+    // Color a trajectory by its current proportion p (0=blue → 0.5=yellow → 1=red)
+    // Same hue mapping as the histogram, so visual connection is direct.
+    function pathColor(p, alpha) {
+        const hue = p * 300 + 10; // 10 (blue-ish) → 160 (green, at 0.5) → 310 (red-ish)
+        return `hsla(${hue}, 60%, 55%, ${alpha})`;
+    }
+
+    function getCSSVar(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    // ── Simulation ─────────────────────────────────────────────────────────────
+    function makeUrn(initBalls, seq) {
+        // seq: pre-generated random sequence for this urn
+        return { red: initBalls, blue: initBalls, history: [0.5], seq, seqIdx: 0 };
+    }
+
+    function drawFromUrn(urn) {
+        const total = urn.red + urn.blue;
+        const r = urn.seq[urn.seqIdx++];
+        if (r < urn.red / total) {
+            urn.red++;
+        } else {
+            urn.blue++;
+        }
+        urn.history.push(urn.red / (urn.red + urn.blue));
+    }
+
+    function reset(seed) {
+        clearTimeout(animHandle);
+        running = false;
+        paused = false;
+        document.getElementById('btnStart').textContent = 'Start';
+
+        const numPaths  = parseInt(document.getElementById('numPaths').value);
+        const initBalls = parseInt(document.getElementById('initBalls').value);
+
+        if (seed !== undefined) {
+            currentSeed = seed;
+        } else {
+            currentSeed = Math.floor(Math.random() * 2**32);
+        }
+
+        // Each urn gets its own independent, reproducible random sequence
+        const sequences = generateUrnSequences(currentSeed, numPaths);
+
+        urns = [];
+        for (let i = 0; i < numPaths; i++) {
+            urns.push(makeUrn(initBalls, sequences[i]));
+        }
+        completedHistories = [];
+        updateStats();
+        drawAll();
+        // Do NOT auto-start — wait for user to click Start
+    }
+
+    function resetSameSeed() {
+        // Replay with exact same seed — produces bit-for-bit identical outcomes
+        reset(currentSeed);
+    }
+
+    function startOrPause() {
+        if (!running) {
+            // First start
+            running = true;
+            paused = false;
+            document.getElementById('btnStart').textContent = 'Pause';
+            schedule();
+        } else {
+            togglePause();
+        }
+    }
+
+    function step() {
+        const stepsPerTick = parseInt(document.getElementById('stepsPerTick').value);
+        let anyActive = false;
+
+        for (const urn of urns) {
+            if (urn.history.length <= MAX_DRAWS) {
+                for (let s = 0; s < stepsPerTick; s++) {
+                    drawFromUrn(urn);
+                }
+                anyActive = true;
+            } else if (!urn._recorded) {
+                completedHistories.push(urn.history[urn.history.length - 1]);
+                urn._recorded = true;
+            }
+        }
+
+        updateStats();
+        drawAll();
+        return anyActive;
+    }
+
+    function runToEnd() {
+        clearTimeout(animHandle);
+        running = true;
+        paused = true;
+        document.getElementById('btnStart').textContent = 'Resume';
+        for (const urn of urns) {
+            while (urn.history.length <= MAX_DRAWS) drawFromUrn(urn);
+            if (!urn._recorded) {
+                completedHistories.push(urn.history[urn.history.length - 1]);
+                urn._recorded = true;
+            }
+        }
+        updateStats();
+        drawAll();
+    }
+
+    // ── Animation loop ─────────────────────────────────────────────────────────
+    const SPEEDS = [80, 40, 12]; // ms per frame for speeds 1, 2, 3
+
+    function schedule() {
+        if (paused || !running) return;
+        const speedIdx = parseInt(document.getElementById('speed').value) - 1;
+        const delay = SPEEDS[speedIdx];
+        animHandle = setTimeout(() => {
+            if (!paused && running) {
+                const active = step();
+                if (active) schedule();
+            }
+        }, delay);
+    }
+
+    function togglePause() {
+        paused = !paused;
+        document.getElementById('btnStart').textContent = paused ? 'Resume' : 'Pause';
+        if (!paused) schedule();
+    }
+
+    // ── Stats ──────────────────────────────────────────────────────────────────
+    function updateStats() {
+        const draws = urns.length > 0 ? urns[0].history.length - 1 : 0;
+        document.getElementById('statDraws').textContent = draws;
+        document.getElementById('statPaths').textContent = urns.length;
+
+        const finals = urns.map(u => u.history[u.history.length - 1]);
+        const locked = finals.filter(p => p > 0.9 || p < 0.1).length;
+        document.getElementById('statLocked').textContent = locked;
+
+        if (finals.length > 1) {
+            const min = Math.min(...finals);
+            const max = Math.max(...finals);
+            document.getElementById('statSpread').textContent =
+                (min * 100).toFixed(0) + '–' + (max * 100).toFixed(0) + '%';
+        }
+    }
+
+    // ── Drawing ────────────────────────────────────────────────────────────────
+    function drawAll() {
+        drawMain();
+        drawHistogram();
+    }
+
+    function drawMain() {
+        const canvas = document.getElementById('mainCanvas');
+        const dpr = window.devicePixelRatio || 1;
+        const W = canvas.parentElement.clientWidth - 48;
+        const H = 320;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const bgColor = isDark ? '#16213e' : '#ffffff';
+        const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+        const textColor = isDark ? '#888888' : '#aaaaaa';
+
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, W, H);
+
+        const pad = { top: 20, right: 20, bottom: 30, left: 44 };
+        const plotW = W - pad.left - pad.right;
+        const plotH = H - pad.top - pad.bottom;
+
+        // Grid lines at 25%, 50%, 75%
+        ctx.strokeStyle = gridColor;
+        ctx.lineWidth = 1;
+        [0.25, 0.5, 0.75].forEach(p => {
+            const y = pad.top + (1 - p) * plotH;
+            ctx.beginPath();
+            ctx.moveTo(pad.left, y);
+            ctx.lineTo(pad.left + plotW, y);
+            ctx.stroke();
+
+            ctx.fillStyle = textColor;
+            ctx.font = '11px Georgia, serif';
+            ctx.textAlign = 'right';
+            ctx.fillText((p * 100).toFixed(0) + '%', pad.left - 6, y + 4);
+        });
+
+        // 0% and 100% labels
+        ctx.fillStyle = textColor;
+        ctx.font = '11px Georgia, serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('100%', pad.left - 6, pad.top + 4);
+        ctx.fillText('0%', pad.left - 6, pad.top + plotH + 4);
+
+        // X-axis label
+        ctx.fillStyle = textColor;
+        ctx.font = '11px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Draws', pad.left + plotW / 2, H - 4);
+
+        // Midline (50%) — prominent
+        const midY = pad.top + 0.5 * plotH;
+        ctx.strokeStyle = isDark ? 'rgba(127,170,219,0.2)' : 'rgba(74,122,176,0.2)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(pad.left, midY);
+        ctx.lineTo(pad.left + plotW, midY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw each urn's history — colored by current proportion (same scale as histogram)
+        urns.forEach((urn, i) => {
+            const history = urn.history;
+            if (history.length < 2) return;
+
+            const currentP = history[history.length - 1];
+            const isStrong = currentP > 0.9 || currentP < 0.1;
+            const alpha = isStrong ? 0.9 : 0.6;
+            ctx.strokeStyle = pathColor(currentP, alpha);
+            ctx.lineWidth = isStrong ? 2.0 : 1.2;
+
+            ctx.beginPath();
+            history.forEach((p, t) => {
+                const x = pad.left + (t / MAX_DRAWS) * plotW;
+                const y = pad.top + (1 - p) * plotH;
+                if (t === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+        });
+
+        // Legend
+        ctx.font = '11px Georgia, serif';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = textColor;
+        ctx.fillText('Each line = one independent history from identical start', pad.left + 8, pad.top + 14);
+    }
+
+    function drawHistogram() {
+        const canvas = document.getElementById('histCanvas');
+        const dpr = window.devicePixelRatio || 1;
+        const W = canvas.parentElement.clientWidth - 48;
+        const H = 160;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const bgColor = isDark ? '#16213e' : '#ffffff';
+        const accentColor = isDark ? '#7faadb' : '#4a7ab0';
+        const textColor = isDark ? '#888888' : '#aaaaaa';
+        const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, W, H);
+
+        const pad = { top: 16, right: 20, bottom: 30, left: 44 };
+        const plotW = W - pad.left - pad.right;
+        const plotH = H - pad.top - pad.bottom;
+
+        const BINS = 20;
+        const counts = new Array(BINS).fill(0);
+
+        // Collect finals: completed urns + current last-known proportion of active urns
+        const finals = urns.map(u => u.history[u.history.length - 1]);
+        finals.forEach(p => {
+            const bin = Math.min(BINS - 1, Math.floor(p * BINS));
+            counts[bin]++;
+        });
+
+        const maxCount = Math.max(1, ...counts);
+
+        // Draw bars
+        const barW = plotW / BINS;
+        counts.forEach((count, bin) => {
+            const barH = (count / maxCount) * plotH;
+            const x = pad.left + bin * barW;
+            const y = pad.top + plotH - barH;
+
+            // Color: blue end → red end
+            const hue = (bin / BINS) * 300 + 10;
+            ctx.fillStyle = `hsla(${hue}, 55%, ${isDark ? 55 : 48}%, 0.8)`;
+            ctx.fillRect(x + 1, y, barW - 2, barH);
+        });
+
+        // Axis labels
+        ctx.fillStyle = textColor;
+        ctx.font = '11px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('0%', pad.left, H - 6);
+        ctx.fillText('50%', pad.left + plotW / 2, H - 6);
+        ctx.fillText('100%', pad.left + plotW, H - 6);
+        ctx.fillText('Final proportion locked in (proportion red)', pad.left + plotW / 2, H - 18);
+
+        // Reference line: flat uniform distribution
+        const uniformH = (finals.length / BINS / Math.max(1, ...counts)) * plotH;
+        if (finals.length >= BINS * 2) {
+            ctx.strokeStyle = isDark ? 'rgba(127,170,219,0.4)' : 'rgba(74,122,176,0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(pad.left, pad.top + plotH - uniformH);
+            ctx.lineTo(pad.left + plotW, pad.top + plotH - uniformH);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = textColor;
+            ctx.font = '10px Georgia, serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('uniform', pad.left + plotW - 4, pad.top + plotH - uniformH - 4);
+        }
+
+        // Y-label
+        ctx.save();
+        ctx.translate(12, pad.top + plotH / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillStyle = textColor;
+        ctx.font = '11px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Histories', 0, 0);
+        ctx.restore();
+    }
+
+    // ── UI helpers ─────────────────────────────────────────────────────────────
+    function updateLabel(sliderId, labelId) {
+        document.getElementById(labelId).textContent = document.getElementById(sliderId).value;
+    }
+
+    function updateSpeedLabel() {
+        const v = parseInt(document.getElementById('speed').value);
+        document.getElementById('speedVal').textContent = ['slow', 'medium', 'fast'][v - 1];
+    }
+
+    // ── Init ───────────────────────────────────────────────────────────────────
+    initTheme();
+    window.addEventListener('resize', drawAll);
+    // Expose state for testing and debugging
+    window._getUrns = () => urns;
+    reset();
+</script>
+</body>
+</html>
