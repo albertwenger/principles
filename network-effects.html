@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Effects — De Principiis</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        :root {
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f0f0f0;
+            --text-primary: #2a2a2a;
+            --text-secondary: #555555;
+            --text-muted: #888888;
+            --accent: #4a7ab0;
+            --accent-hover: #3d6a9c;
+            --border: #e0e0e0;
+            --shadow: rgba(0, 0, 0, 0.08);
+            --canvas-bg: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #1c2a4a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #bbbbbb;
+            --text-muted: #888888;
+            --accent: #7faadb;
+            --accent-hover: #9bc0eb;
+            --border: #2a3a5e;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --canvas-bg: #16213e;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg-primary);
+            min-height: 100vh;
+            font-family: Georgia, 'Times New Roman', serif;
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+
+        header { text-align: center; margin-bottom: 30px; }
+        .breadcrumb { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px; }
+        .breadcrumb a { color: var(--accent); text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        h1 { font-size: 2rem; font-weight: normal; color: var(--accent); margin-bottom: 5px; }
+        .subtitle { font-style: italic; color: var(--text-muted); }
+
+        .description {
+            max-width: 700px;
+            margin: 0 auto 30px;
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .simulation-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .panel-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        canvas { width: 100%; border-radius: 8px; cursor: crosshair; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            color: var(--accent);
+            font-weight: normal;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .controls {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .controls-header {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 2fr 2fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .control-buttons { display: flex; gap: 10px; }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border); }
+
+        .insight {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .insight h2 {
+            font-size: 1.2rem;
+            font-weight: normal;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .insight p { color: var(--text-secondary); margin-bottom: 10px; }
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--accent);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            z-index: 100;
+        }
+
+        @media (max-width: 750px) {
+            .simulation-container { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: 1fr 1fr; }
+            .controls-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">☀️</span> <span id="theme-label">Light</span>
+    </button>
+
+    <div class="container">
+        <header>
+            <div class="breadcrumb">
+                <a href="index.html">De Principiis</a> → Network Effects
+            </div>
+            <h1>Network Effects</h1>
+            <p class="subtitle">Why the value of a network grows faster than the network itself</p>
+        </header>
+
+        <main>
+            <p class="description">
+                Click the graph to add nodes. The chart on the right builds dynamically as your network grows.
+            </p>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="node-count">0</div>
+                    <div class="stat-label">Nodes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="connection-count">0</div>
+                    <div class="stat-label">Connections</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-groups">0</div>
+                    <div class="stat-label">Possible Groups</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="efficiency">0</div>
+                    <div class="stat-label">Info density</div>
+                </div>
+            </div>
+
+            <div class="simulation-container">
+                <div class="panel">
+                    <div class="panel-title">Network Graph</div>
+                    <canvas id="network-canvas" width="440" height="400"></canvas>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">Value Comparison</div>
+                    <canvas id="value-canvas" width="440" height="400"></canvas>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="controls-header">Interaction</div>
+                <div class="controls-grid">
+                    <div class="checkbox-group">
+                        <label class="checkbox-item"><input type="checkbox" id="check-sarnoff" onchange="drawValueCurve()"> Sarnoff (n)</label>
+                        <label class="checkbox-item"><input type="checkbox" id="check-odlyzko" onchange="drawValueCurve()"> Odlyzko (n log n)</label>
+                        <label class="checkbox-item"><input type="checkbox" id="check-metcalfe" checked onchange="drawValueCurve()"> Metcalfe (n²)</label>
+                        <label class="checkbox-item"><input type="checkbox" id="check-reed" onchange="drawValueCurve()"> Reed (2ⁿ)</label>
+                    </div>
+                    <div class="control-buttons">
+                        <button class="btn btn-primary" onclick="addRandomNode()">Add Node</button>
+                        <button class="btn btn-secondary" onclick="popNode()">Remove Node</button>
+                        <button class="btn btn-secondary" onclick="resetNetwork()">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight">
+                <h2>The Models</h2>
+                <p><strong>Sarnoff's Law</strong> (<span class="formula">V ∝ n</span>): Broadcast value. Adding one viewer adds one unit of value.</p>
+                <p><strong>Odlyzko's Law</strong> (<span class="formula">V ∝ n log n</span>): Diminishing utility in massive networks.</p>
+                <p><strong>Metcalfe's Law</strong> (<span class="formula">V ∝ n²</span>): Telecommunications value. Each participant adds a connection for every existing member.</p>
+                <p><strong>Reed's Law</strong> (<span class="formula">V ∝ 2ⁿ</span>): Group-forming value (DAOs/communities). Scales with possible subgroups.</p>
+            </div>
+        </main>
+
+        <footer>
+            <p><a href="index.html">← Back to De Principiis</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // Theme logic
+        function initTheme() {
+            const saved = localStorage.getItem('deprincipiis-theme');
+            if (saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                updateThemeUI('dark');
+            }
+        }
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            if (next === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+            else document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('deprincipiis-theme', next);
+            updateThemeUI(next);
+            drawNetwork();
+            drawValueCurve();
+        }
+        function updateThemeUI(theme) {
+            document.getElementById('theme-icon').textContent = theme === 'dark' ? '🌙' : '☀️';
+            document.getElementById('theme-label').textContent = theme === 'dark' ? 'Dark' : 'Light';
+        }
+        initTheme();
+
+        // State
+        let nodes = [];
+        const networkCanvas = document.getElementById('network-canvas');
+        const valueCanvas = document.getElementById('value-canvas');
+        const nCtx = networkCanvas.getContext('2d');
+        const vCtx = valueCanvas.getContext('2d');
+
+        const COLORS = {
+            sarnoff: '#888888',
+            odlyzko: '#4a90e2',
+            metcalfe: '#4a7ab0',
+            reed: '#e91e63'
+        };
+
+        function getColors() {
+            const style = getComputedStyle(document.documentElement);
+            return {
+                bg: style.getPropertyValue('--canvas-bg').trim(),
+                accent: style.getPropertyValue('--accent').trim(),
+                border: style.getPropertyValue('--border').trim(),
+                text: style.getPropertyValue('--text-secondary').trim(),
+                muted: style.getPropertyValue('--text-muted').trim()
+            };
+        }
+
+        function calcValue(model, n) {
+            if (n < 1) return 0;
+            switch (model) {
+                case 'sarnoff': return n;
+                case 'odlyzko': return n * Math.log2(Math.max(n, 1));
+                case 'metcalfe': return (n * (n - 1)) / 2;
+                case 'reed': return Math.pow(2, n) - n - 1;
+                default: return 0;
+            }
+        }
+
+        function addNode(x, y) {
+            nodes.push({ x, y });
+            updateStats();
+            drawNetwork();
+            drawValueCurve();
+        }
+
+        function addRandomNode() {
+            const margin = 40;
+            addNode(
+                margin + Math.random() * (networkCanvas.width - 2 * margin),
+                margin + Math.random() * (networkCanvas.height - 2 * margin)
+            );
+        }
+
+        function popNode() {
+            nodes.pop();
+            updateStats();
+            drawNetwork();
+            drawValueCurve();
+        }
+
+        function resetNetwork() {
+            nodes = [];
+            updateStats();
+            drawNetwork();
+            drawValueCurve();
+        }
+
+        function updateStats() {
+            const n = nodes.length;
+            document.getElementById('node-count').textContent = n;
+            document.getElementById('connection-count').textContent = Math.round(calcValue('metcalfe', n));
+            const rv = calcValue('reed', n);
+            document.getElementById('total-groups').textContent = rv > 1000000 ? (rv/1000000).toFixed(1) + 'M' : Math.round(rv);
+            document.getElementById('efficiency').textContent = n > 0 ? (calcValue('odlyzko', n) / n).toFixed(2) : '0.00';
+        }
+
+        function drawNetwork() {
+            const c = getColors();
+            nCtx.clearRect(0, 0, networkCanvas.width, networkCanvas.height);
+            nCtx.fillStyle = c.bg;
+            nCtx.fillRect(0, 0, networkCanvas.width, networkCanvas.height);
+
+            if (nodes.length > 1) {
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        nCtx.beginPath();
+                        nCtx.moveTo(nodes[i].x, nodes[i].y);
+                        nCtx.lineTo(nodes[j].x, nodes[j].y);
+                        nCtx.strokeStyle = c.accent;
+                        nCtx.globalAlpha = 0.15;
+                        nCtx.lineWidth = 1;
+                        nCtx.stroke();
+                    }
+                }
+            }
+
+            nCtx.globalAlpha = 1;
+            nodes.forEach(node => {
+                nCtx.beginPath();
+                nCtx.arc(node.x, node.y, 6, 0, Math.PI * 2);
+                nCtx.fillStyle = c.accent;
+                nCtx.fill();
+                nCtx.strokeStyle = c.bg;
+                nCtx.lineWidth = 2;
+                nCtx.stroke();
+            });
+
+            if (nodes.length === 0) {
+                nCtx.fillStyle = c.muted;
+                nCtx.font = '16px Georgia';
+                nCtx.textAlign = 'center';
+                nCtx.fillText('Click to add nodes', networkCanvas.width / 2, networkCanvas.height / 2);
+            }
+        }
+
+        function drawValueCurve() {
+            const c = getColors();
+            const w = valueCanvas.width;
+            const h = valueCanvas.height;
+            const pad = { top: 40, right: 80, bottom: 40, left: 60 };
+            const plotW = w - pad.left - pad.right;
+            const plotH = h - pad.top - pad.bottom;
+
+            vCtx.clearRect(0, 0, w, h);
+            vCtx.fillStyle = c.bg;
+            vCtx.fillRect(0, 0, w, h);
+
+            vCtx.strokeStyle = c.border;
+            vCtx.beginPath();
+            vCtx.moveTo(pad.left, pad.top);
+            vCtx.lineTo(pad.left, h - pad.bottom);
+            vCtx.lineTo(w - pad.right, h - pad.bottom);
+            vCtx.stroke();
+
+            const models = ['sarnoff', 'odlyzko', 'metcalfe', 'reed'];
+            const activeModels = models.filter(m => document.getElementById(`check-${m}`).checked);
+
+            if (nodes.length < 1 || activeModels.length === 0) return;
+
+            // Chart only builds up to current nodes + small hint
+            const maxN = Math.max(nodes.length, 5); 
+            let maxVal = 0;
+            activeModels.forEach(m => maxVal = Math.max(maxVal, calcValue(m, maxN)));
+
+            activeModels.forEach(m => {
+                vCtx.beginPath();
+                vCtx.strokeStyle = COLORS[m];
+                vCtx.lineWidth = 2;
+                
+                for (let i = 0; i <= nodes.length; i++) {
+                    const x = pad.left + (i / maxN) * plotW;
+                    const y = (h - pad.bottom) - (calcValue(m, i) / maxVal) * plotH;
+                    if (i === 0) vCtx.moveTo(x, y);
+                    else vCtx.lineTo(x, y);
+                }
+                vCtx.stroke();
+
+                // Point at current
+                const cx = pad.left + (nodes.length / maxN) * plotW;
+                const cy = (h - pad.bottom) - (calcValue(m, nodes.length) / maxVal) * plotH;
+                vCtx.beginPath();
+                vCtx.arc(cx, cy, 4, 0, Math.PI * 2);
+                vCtx.fillStyle = COLORS[m];
+                vCtx.fill();
+
+                // Label at the end of the line
+                vCtx.font = '11px Georgia';
+                vCtx.textAlign = 'left';
+                vCtx.fillText(m.charAt(0).toUpperCase() + m.slice(1), cx + 8, cy + 4);
+            });
+
+            // X-axis ticks
+            vCtx.fillStyle = c.muted;
+            vCtx.textAlign = 'center';
+            for (let i = 0; i <= maxN; i += Math.max(1, Math.floor(maxN/5))) {
+                const x = pad.left + (i / maxN) * plotW;
+                vCtx.fillText(i, x, h - pad.bottom + 15);
+            }
+        }
+
+        networkCanvas.addEventListener('click', (e) => {
+            const rect = networkCanvas.getBoundingClientRect();
+            addNode((e.clientX - rect.left) * (networkCanvas.width / rect.width), (e.clientY - rect.top) * (networkCanvas.height / rect.height));
+        });
+
+        drawNetwork();
+        drawValueCurve();
+    </script>
+</body>
+</html>
